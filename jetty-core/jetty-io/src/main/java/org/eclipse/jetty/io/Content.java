@@ -39,6 +39,7 @@ import org.eclipse.jetty.util.FutureCallback;
 import org.eclipse.jetty.util.FuturePromise;
 import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.Promise;
+import org.eclipse.jetty.util.Retainable;
 
 /**
  * <p>Namespace class that contains the definitions of a {@link Source content source},
@@ -442,7 +443,7 @@ public class Content
      * to release the {@code ByteBuffer} back into a pool), or the
      * {@link #release()} method overridden.</p>
      */
-    public interface Chunk
+    public interface Chunk extends Retainable
     {
         /**
          * <p>An empty, non-last, chunk.</p>
@@ -540,7 +541,7 @@ public class Content
         /**
          * <p>Releases the resources associated to this Chunk.</p>
          */
-        public void release();
+        public boolean release();
 
         /**
          * @return the number of bytes remaining in this Chunk
@@ -636,8 +637,14 @@ public class Content
             }
 
             @Override
-            public void release()
+            public void retain()
             {
+            }
+
+            @Override
+            public boolean release()
+            {
+                return true;
             }
         }
     }

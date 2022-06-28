@@ -101,6 +101,7 @@ public class RetainableByteBuffer implements Retainable
      * Decrements the retained counter of this buffer.
      * @return true if the buffer was re-pooled, false otherwise.
      */
+    @Override
     public boolean release()
     {
         int ref = references.updateAndGet(c ->

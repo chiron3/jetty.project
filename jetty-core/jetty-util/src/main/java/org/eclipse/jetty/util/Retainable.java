@@ -16,4 +16,9 @@ package org.eclipse.jetty.util;
 public interface Retainable
 {
     public void retain();
+
+    /**
+     * @return true if the buffer was re-pooled, false otherwise.
+     */
+    public boolean release();
 }

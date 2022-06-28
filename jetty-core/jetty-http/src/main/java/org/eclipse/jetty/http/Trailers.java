@@ -40,8 +40,14 @@ public class Trailers implements Content.Chunk
     }
 
     @Override
-    public void release()
+    public void retain()
     {
+    }
+
+    @Override
+    public boolean release()
+    {
+        return true;
     }
 
     public HttpFields getTrailers()

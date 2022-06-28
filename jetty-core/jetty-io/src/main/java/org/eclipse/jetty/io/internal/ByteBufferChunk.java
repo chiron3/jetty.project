@@ -15,7 +15,7 @@ package org.eclipse.jetty.io.internal;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.util.BufferUtil;
@@ -40,14 +40,15 @@ public class ByteBufferChunk implements Content.Chunk
     };
 
     private final ByteBuffer byteBuffer;
+    private final AtomicInteger references = new AtomicInteger(1);
     private final boolean last;
-    private final AtomicReference<Runnable> releaser;
+    private final Runnable releaser;
 
     public ByteBufferChunk(ByteBuffer byteBuffer, boolean last, Runnable releaser)
     {
         this.byteBuffer = Objects.requireNonNull(byteBuffer);
         this.last = last;
-        this.releaser = releaser == null ? null : new AtomicReference<>(releaser);
+        this.releaser = releaser;
     }
 
     public ByteBuffer getByteBuffer()
@@ -60,14 +61,25 @@ public class ByteBufferChunk implements Content.Chunk
         return last;
     }
 
-    public void release()
+    @Override
+    public void retain()
     {
-        if (releaser != null)
+        if (references.getAndUpdate(c -> c == 0 ? 0 : c + 1) == 0)
+            throw new IllegalStateException("released " + this);
+    }
+
+    @Override
+    public boolean release()
+    {
+        int ref = references.updateAndGet(c ->
         {
-            Runnable runnable = releaser.getAndSet(null);
-            if (runnable != null)
-                runnable.run();
-        }
+            if (c == 0)
+                throw new IllegalStateException("already released " + this);
+            return c - 1;
+        });
+        if (ref == 0 && releaser != null)
+            releaser.run();
+        return ref == 0;
     }
 
     @Override
