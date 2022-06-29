@@ -466,6 +466,17 @@ public class Content
          */
         public static final Content.Chunk EOF = ByteBufferChunk.EOF;
 
+        public static Chunk from(Chunk chunk, boolean last)
+        {
+            chunk.retain();
+            return new ByteBufferChunk(chunk.getByteBuffer().slice(), last, null, chunk);
+        }
+
+        public static Chunk from(byte[] buffer, boolean last)
+        {
+            return from(ByteBuffer.wrap(buffer), last);
+        }
+
         /**
          * <p>Creates a last/non-last Chunk with the given ByteBuffer.</p>
          *
@@ -475,7 +486,7 @@ public class Content
          */
         public static Chunk from(ByteBuffer byteBuffer, boolean last)
         {
-            return from(byteBuffer, last, null);
+            return new ByteBufferChunk(byteBuffer, last, null, Retainable.NonRetaining.INSTANCE);
         }
 
         /**
@@ -488,7 +499,7 @@ public class Content
          */
         public static Chunk from(ByteBuffer byteBuffer, boolean last, Runnable releaser)
         {
-            return new ByteBufferChunk(byteBuffer, last, releaser);
+            return new ByteBufferChunk(byteBuffer, last, releaser, new Retainable.Counter());
         }
 
         /**
@@ -614,6 +625,11 @@ public class Content
         public default boolean isTerminal()
         {
             return this instanceof Error || isLast() && !hasRemaining();
+        }
+
+        default Chunk slice(boolean last)
+        {
+            return Chunk.from(this, last);
         }
 
         /**

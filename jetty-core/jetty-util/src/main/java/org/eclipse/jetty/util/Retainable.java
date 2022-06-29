@@ -13,12 +13,58 @@
 
 package org.eclipse.jetty.util;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public interface Retainable
 {
-    public void retain();
+    void retain();
 
     /**
      * @return true if the buffer was re-pooled, false otherwise.
      */
-    public boolean release();
+    boolean release();
+
+    class NonRetaining implements Retainable
+    {
+        public static final Retainable INSTANCE = new NonRetaining();
+
+        private NonRetaining()
+        {
+        }
+
+        @Override
+        public void retain()
+        {
+        }
+
+        @Override
+        public boolean release()
+        {
+            return true;
+        }
+    }
+
+    class Counter implements Retainable
+    {
+        private final AtomicInteger references = new AtomicInteger(1);
+
+        @Override
+        public void retain()
+        {
+            if (references.getAndUpdate(c -> c == 0 ? 0 : c + 1) == 0)
+                throw new IllegalStateException("cannot retain released " + this);
+        }
+
+        @Override
+        public boolean release()
+        {
+            int ref = references.updateAndGet(c ->
+            {
+                if (c == 0)
+                    throw new IllegalStateException("already released " + this);
+                return c - 1;
+            });
+            return ref == 0;
+        }
+    }
 }

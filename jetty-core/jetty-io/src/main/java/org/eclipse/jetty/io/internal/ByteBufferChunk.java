@@ -15,14 +15,14 @@ package org.eclipse.jetty.io.internal;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.util.BufferUtil;
+import org.eclipse.jetty.util.Retainable;
 
 public class ByteBufferChunk implements Content.Chunk
 {
-    public static final ByteBufferChunk EMPTY = new ByteBufferChunk(BufferUtil.EMPTY_BUFFER, false, null)
+    public static final ByteBufferChunk EMPTY = new ByteBufferChunk(BufferUtil.EMPTY_BUFFER, false, null, Retainable.NonRetaining.INSTANCE)
     {
         @Override
         public String toString()
@@ -30,7 +30,7 @@ public class ByteBufferChunk implements Content.Chunk
             return "%s[EMPTY]".formatted(ByteBufferChunk.class.getSimpleName());
         }
     };
-    public static final ByteBufferChunk EOF = new ByteBufferChunk(BufferUtil.EMPTY_BUFFER, true, null)
+    public static final ByteBufferChunk EOF = new ByteBufferChunk(BufferUtil.EMPTY_BUFFER, true, null, Retainable.NonRetaining.INSTANCE)
     {
         @Override
         public String toString()
@@ -40,15 +40,16 @@ public class ByteBufferChunk implements Content.Chunk
     };
 
     private final ByteBuffer byteBuffer;
-    private final AtomicInteger references = new AtomicInteger(1);
     private final boolean last;
     private final Runnable releaser;
+    private final Retainable retainable;
 
-    public ByteBufferChunk(ByteBuffer byteBuffer, boolean last, Runnable releaser)
+    public ByteBufferChunk(ByteBuffer byteBuffer, boolean last, Runnable releaser, Retainable retainable)
     {
         this.byteBuffer = Objects.requireNonNull(byteBuffer);
         this.last = last;
         this.releaser = releaser;
+        this.retainable = retainable;
     }
 
     public ByteBuffer getByteBuffer()
@@ -64,22 +65,16 @@ public class ByteBufferChunk implements Content.Chunk
     @Override
     public void retain()
     {
-        if (references.getAndUpdate(c -> c == 0 ? 0 : c + 1) == 0)
-            throw new IllegalStateException("released " + this);
+        retainable.retain();
     }
 
     @Override
     public boolean release()
     {
-        int ref = references.updateAndGet(c ->
-        {
-            if (c == 0)
-                throw new IllegalStateException("already released " + this);
-            return c - 1;
-        });
-        if (ref == 0 && releaser != null)
+        boolean released = retainable.release();
+        if (released && releaser != null)
             releaser.run();
-        return ref == 0;
+        return released;
     }
 
     @Override
