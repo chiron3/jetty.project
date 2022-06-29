@@ -55,6 +55,12 @@ public class OutputStreamContentSource implements Content.Source
         async.fail(failure);
     }
 
+    @Override
+    public boolean rewind()
+    {
+        return async.rewind();
+    }
+
     private class AsyncOutputStream extends OutputStream
     {
         @Override

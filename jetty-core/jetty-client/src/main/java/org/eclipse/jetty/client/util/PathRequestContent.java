@@ -59,10 +59,4 @@ public class PathRequestContent extends PathContentSource implements Request.Con
     {
         return contentType;
     }
-
-    @Override
-    public boolean rewind()
-    {
-        return super.rewind();
-    }
 }

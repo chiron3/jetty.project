@@ -333,6 +333,18 @@ public class Content
         public void fail(Throwable failure);
 
         /**
+         * <p>Rewinds this content, if possible, so that subsequent reads return
+         * chunks starting from the beginning of this content.</p>
+         *
+         * @return true if this content has been rewound, false if this content
+         * cannot be rewound
+         */
+        public default boolean rewind()
+        {
+            return false;
+        }
+
+        /**
          * <p>A wrapper of a nested source of content, that may transform the chunks obtained from
          * the nested source.</p>
          * <p>Typical implementations may split/coalesce the chunks read from the nested source,

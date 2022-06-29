@@ -551,6 +551,12 @@ public interface Request extends Attributes, Content.Source
         }
 
         @Override
+        public boolean rewind()
+        {
+            return getWrapped().rewind();
+        }
+
+        @Override
         public void push(MetaData.Request request)
         {
             getWrapped().push(request);

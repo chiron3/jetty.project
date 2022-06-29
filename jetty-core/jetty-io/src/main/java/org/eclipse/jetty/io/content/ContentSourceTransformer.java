@@ -97,6 +97,12 @@ public abstract class ContentSourceTransformer implements Content.Source
         }
     }
 
+    @Override
+    public boolean rewind()
+    {
+        return rawSource.rewind();
+    }
+
     private Content.Chunk process(Content.Chunk rawChunk)
     {
         try

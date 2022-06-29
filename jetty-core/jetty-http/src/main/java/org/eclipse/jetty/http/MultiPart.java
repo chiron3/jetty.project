@@ -561,6 +561,13 @@ public class MultiPart
             invoker.run(this::invokeDemandCallback);
         }
 
+        @Override
+        public boolean rewind()
+        {
+            // TODO implement
+            return false;
+        }
+
         private void invokeDemandCallback()
         {
             Runnable callback;

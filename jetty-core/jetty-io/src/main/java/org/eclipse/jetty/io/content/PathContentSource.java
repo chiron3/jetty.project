@@ -207,7 +207,7 @@ public class PathContentSource implements Content.Source
             byteBufferPool.release(byteBuffer);
     }
 
-    protected boolean rewind()
+    public boolean rewind()
     {
         try (AutoLock ignored = lock.lock())
         {

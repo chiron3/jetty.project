@@ -233,6 +233,7 @@ public class MultiPartCaptureTest
                 assertThat("Part[" + expected.name + "]", parts, is(notNullValue()));
                 MultiPart.Part part = parts.get(0);
                 MessageDigest digest = MessageDigest.getInstance("SHA1");
+                assertThat(part.getContent().rewind(), is(true));
                 try (InputStream partInputStream = Content.Source.asInputStream(part.getContent());
                      DigestOutputStream digester = new DigestOutputStream(IO.getNullStream(), digest))
                 {
